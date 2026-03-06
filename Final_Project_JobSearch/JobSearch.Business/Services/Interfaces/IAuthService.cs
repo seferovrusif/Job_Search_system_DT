@@ -1,8 +1,4 @@
-﻿using AutoMapper;
-using JobSearch.Business.DTOs.AuthDTOs;
-using JobSearch.Business.ExternalServices.Interfaces;
-using JobSearch.Core.Entities;
-using Microsoft.AspNetCore.Identity;
+﻿using JobSearch.Business.DTOs.AuthDTOs;
 
 namespace JobSearch.Business.Services.Interfaces
 {
@@ -11,6 +7,6 @@ namespace JobSearch.Business.Services.Interfaces
 
         public Task<TokenDTO> Login(LoginDTO dto);
         public Task CreateAsync(RegisterDTO dto);
-
+        public Task ConfirmEmailAsync(string userId, string token);
     }
 }

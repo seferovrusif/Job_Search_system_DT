@@ -25,5 +25,18 @@ namespace JobSearch.Api.Controllers
             TokenDTO a = await _userservice.Login(dto);
             return Ok(a);
         }
+        [HttpGet("ConfirmEmail")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+        {
+            try
+            {
+                await _userservice.ConfirmEmailAsync(userId, token);
+                return Ok("Account confirmed! You can now login.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

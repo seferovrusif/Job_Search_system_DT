@@ -1,3 +1,4 @@
+using Job_Search_system.Business.ExternalServices.Implementations;
 using JobSearch.Api.Helpers;
 using JobSearch.Business;
 using JobSearch.Business.ExternalServices;
@@ -57,11 +58,7 @@ namespace JobSearch.Api
             builder.Services.AddRepositories();
             builder.Services.AddServices();
             builder.Services.AddBusinessLayer();
-            ///
-            builder.Services.Configure<EmailConfirmationSettings>(
-    builder.Configuration.GetSection("EmailConfirmationSettings"));
             builder.Services.AddScoped<IEmailConfirmationService, EmailConfirmationService>();
-            ///
             builder.Services.AddAuthent(jwt);
             builder.Services.AddHttpContextAccessor();
 

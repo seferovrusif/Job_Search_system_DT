@@ -1,48 +1,50 @@
 ﻿using JobSearch.Business.ExternalServices.Interfaces;
-using JobSearch.Core.Entities;
 using MailKit.Net.Smtp;
-using Microsoft.Extensions.Options;
+using MailKit.Security;
+using Microsoft.Extensions.Configuration;
 using MimeKit;
-namespace JobSearch.Business.ExternalServices.Implements
+using System.Threading.Tasks;
+
+namespace Job_Search_system.Business.ExternalServices.Implementations
 {
     public class EmailConfirmationService : IEmailConfirmationService
     {
-        private readonly EmailConfirmationSettings _settings;
+        private readonly IConfiguration _configuration;
 
-        public EmailConfirmationService(IOptions<EmailConfirmationSettings> settings)
+        public string SmtpServer { get; set; }
+        public int Port { get; set; }
+        public string SenderName { get; set; }
+        public string SenderEmail { get; set; }
+        public string UserName { get; set; }
+        public string Password { get; set; }
+
+        public EmailConfirmationService(IConfiguration configuration)
         {
-            _settings = settings.Value;
+            _configuration = configuration;
+            SmtpServer = _configuration["EmailConfirmationSettings:SmtpServer"];
+            Port = int.Parse(_configuration["EmailConfirmationSettings:Port"] ?? "587");
+            SenderName = _configuration["EmailConfirmationSettings:SenderName"];
+            SenderEmail = _configuration["EmailConfirmationSettings:SenderEmail"];
+            UserName = _configuration["EmailConfirmationSettings:UserName"];
+            Password = _configuration["EmailConfirmationSettings:Password"];
         }
 
-        public async Task SendConfirmationEmailAsync(AppUser user, string confirmationLink)
+        public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(
-                _settings.SenderName,
-                _settings.SenderEmail));
+            var email = new MimeMessage();
+            email.From.Add(new MailboxAddress(SenderName, SenderEmail));
+            email.To.Add(MailboxAddress.Parse(toEmail));
+            email.Subject = subject;
 
-            message.To.Add(MailboxAddress.Parse(user.Email));
-            message.Subject = "Confirm your email";
-
-            message.Body = new BodyBuilder
-            {
-                HtmlBody = $@"
-                <h3>Hello {user.UserName}</h3>
-                <p>Please confirm your email by clicking the link below:</p>
-                <a href='{confirmationLink}'>Confirm Email</a>"
-            }.ToMessageBody();
+            var builder = new BodyBuilder { HtmlBody = body };
+            email.Body = builder.ToMessageBody();
 
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(
-                _settings.SmtpServer,
-                _settings.Port,
-                MailKit.Security.SecureSocketOptions.StartTls);
 
-            await smtp.AuthenticateAsync(
-                _settings.UserName,
-                _settings.Password);
-
-            await smtp.SendAsync(message);
+            // Təhlükəsizlik üçün TLS (Advanced Security)
+            await smtp.ConnectAsync(SmtpServer, Port, SecureSocketOptions.StartTls);
+            await smtp.AuthenticateAsync(UserName, Password);
+            await smtp.SendAsync(email);
             await smtp.DisconnectAsync(true);
         }
     }
