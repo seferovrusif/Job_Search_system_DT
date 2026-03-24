@@ -6,6 +6,7 @@ A **.NET 7 Web API** project for managing job postings, applicants, companies, a
 
 ---
 
+
 ## 🚀 Tech Stack
 
 | Technology                        | Purpose                                       |
@@ -128,3 +129,4 @@ OpenAPI compliant for easy testing and external integration (Postman collection 
 * **Rusif Safarov** – [GitHub Profile](https://github.com/seferovrusif)
 
 --
+<3
