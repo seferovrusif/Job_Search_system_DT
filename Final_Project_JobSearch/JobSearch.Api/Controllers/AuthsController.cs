@@ -1,4 +1,5 @@
 ﻿using JobSearch.Business.DTOs.AuthDTOs;
+using JobSearch.Business.Services.Implements;
 using JobSearch.Business.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,6 +33,19 @@ namespace JobSearch.Api.Controllers
             {
                 await _userservice.ConfirmEmailAsync(userId, token);
                 return Ok("Account confirmed! You can now login.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost("resend-confirmation")]
+        public async Task<IActionResult> ResendConfirmation([FromQuery] string email)
+        {
+            try
+            {
+                await _userservice.ResendConfirmationEmailAsync(email);
+                return Ok(new { message = "Confirmation email has been resent successfully." });
             }
             catch (Exception ex)
             {

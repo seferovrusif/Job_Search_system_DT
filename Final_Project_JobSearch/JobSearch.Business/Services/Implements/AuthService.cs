@@ -32,7 +32,6 @@ namespace JobSearch.Business.Services.Implements
             var result = await _userManager.CreateAsync(user, dto.Password);
             if (!result.Succeeded)
             {
-                ///TODO: belke strbuilderi liste deyisdim
                 StringBuilder sb = new();
                 foreach (var item in result.Errors)
                 {
@@ -40,24 +39,61 @@ namespace JobSearch.Business.Services.Implements
                 }
                 throw new AppUserRegisterFailedException(sb.ToString().TrimEnd());
             }
+
             var roleResult = await _userManager.AddToRoleAsync(user, nameof(Roles.Member));
             if (!roleResult.Succeeded)
             {
                 StringBuilder sb = new();
-                foreach (var item in result.Errors)
+                foreach (var item in roleResult.Errors) 
                 {
                     sb.Append(item.Description + " ");
                 }
                 throw new AppUserRegisterFailedException(sb.ToString().TrimEnd());
             }
+
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             byte[] tokenGeneratedBytes = Encoding.UTF8.GetBytes(token);
             var codeEncoded = WebEncoders.Base64UrlEncode(tokenGeneratedBytes);
+
+            // Qeyd: Port nömrəsinin (7105) launchSettings.json ilə eyni olduğundan əmin ol
             string confirmationLink = $"https://localhost:7105/api/Auths/ConfirmEmail?userId={user.Id}&token={codeEncoded}";
             string body = $"<h3>Welcome!</h3><p>Please <a href='{confirmationLink}'>click here</a> to confirm.</p>";
+
+            try
+            {
+                await _emailService.SendEmailAsync(user.Email, "Confirm Account", body);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SMTP Error] Mail wasn't send, but user created. Error: {ex.Message}");
+            }
+        }
+
+
+
+        public async Task ResendConfirmationEmailAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) throw new Exception("User not found");
+
+            if (await _userManager.IsEmailConfirmedAsync(user))
+            {
+                throw new Exception("Email is already confirmed.");
+            }
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            byte[] tokenGeneratedBytes = Encoding.UTF8.GetBytes(token);
+            var codeEncoded = WebEncoders.Base64UrlEncode(tokenGeneratedBytes);
+
+            string confirmationLink = $"https://localhost:7105/api/Auths/ConfirmEmail?userId={user.Id}&token={codeEncoded}";
+            string body = $"<h3>Email Confirmation</h3><p>Please <a href='{confirmationLink}'>click here</a> to confirm your account.</p>";
+
             await _emailService.SendEmailAsync(user.Email, "Confirm Account", body);
         }
-        
+
+
+
+
 
         public async Task<TokenDTO> Login(LoginDTO dto)
         {
@@ -79,7 +115,7 @@ namespace JobSearch.Business.Services.Implements
             if (!result) throw new PasswordOrUserNameWrongException();
             string Role = (await _userManager.GetRolesAsync(User)).First();
             return _tokenService.CreateToken(new TokenItemsDTO
-            {
+            {       
                 role = Role,
                 user = User
             });
