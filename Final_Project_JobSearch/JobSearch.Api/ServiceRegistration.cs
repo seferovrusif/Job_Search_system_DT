@@ -23,6 +23,10 @@ namespace JobSearch.Api
                 opt.SignIn.RequireConfirmedEmail = true;///
                 opt.Password.RequireNonAlphanumeric = false;
             }).AddDefaultTokenProviders().AddEntityFrameworkStores<JobSearchContext>();
+            services.Configure<DataProtectionTokenProviderOptions>(opt =>
+            {
+                opt.TokenLifespan = TimeSpan.FromMinutes(5);
+            });
             return services;
         }
         public static IServiceCollection AddAuthent(this IServiceCollection services, Jwt jwt)

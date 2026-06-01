@@ -9,5 +9,9 @@ namespace JobSearch.Business.Services.Interfaces
         public Task CreateAsync(RegisterDTO dto);
         public Task ConfirmEmailAsync(string userId, string token);
         public Task ResendConfirmationEmailAsync(string email);
+
+        public Task SendLoginCodeAsync(LoginDTO dto);
+        public Task<TokenDTO> VerifyLoginCodeAsync(VerifyTwoFactorDTO dto);
+
     }
 }

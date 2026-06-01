@@ -88,7 +88,7 @@ namespace JobSearch.Business.Services.Implements
             string confirmationLink = $"https://localhost:7105/api/Auths/ConfirmEmail?userId={user.Id}&token={codeEncoded}";
             string body = $"<h3>Email Confirmation</h3><p>Please <a href='{confirmationLink}'>click here</a> to confirm your account.</p>";
 
-            await _emailService.SendEmailAsync(user.Email, "Confirm Account", body);
+                await _emailService.SendEmailAsync(user.Email, "Confirm Account", body);
         }
 
 
@@ -132,6 +132,51 @@ namespace JobSearch.Business.Services.Implements
                 var error = string.Join(", ", result.Errors.Select(e => e.Description));
                 throw new Exception($"Confirmation failed: {error}");
             }
+        }
+
+
+        public async Task SendLoginCodeAsync(LoginDTO dto)
+        {
+            AppUser user;
+            if (dto.UserNameOrEmail.Contains("@"))
+                user = await _userManager.FindByEmailAsync(dto.UserNameOrEmail);
+            else
+                user = await _userManager.FindByNameAsync(dto.UserNameOrEmail);
+
+            if (user == null) throw new PasswordOrUserNameWrongException();
+
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+                throw new Exception("Email not confirmed. Please check your inbox.");
+
+            var passwordOk = await _userManager.CheckPasswordAsync(user, dto.Password);
+            if (!passwordOk) throw new PasswordOrUserNameWrongException();
+
+            var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+            var body = $"<h3>Login verification</h3>" +
+                       $"<p>Your one-time login code is: <b>{code}</b></p>" +
+                       $"<p>This code is valid for a short time only.</p>";
+            await _emailService.SendEmailAsync(user.Email, "Your login code", body);
+        }
+
+        public async Task<TokenDTO> VerifyLoginCodeAsync(VerifyTwoFactorDTO dto)
+        {
+            AppUser user;
+            if (dto.UserNameOrEmail.Contains("@"))
+                user = await _userManager.FindByEmailAsync(dto.UserNameOrEmail);
+            else
+                user = await _userManager.FindByNameAsync(dto.UserNameOrEmail);
+
+            if (user == null) throw new PasswordOrUserNameWrongException();
+
+            var valid = await _userManager.VerifyTwoFactorTokenAsync(user, "Email", dto.Code);
+            if (!valid) throw new Exception("Invalid or expired verification code.");
+
+            string role = (await _userManager.GetRolesAsync(user)).First();
+            return _tokenService.CreateToken(new TokenItemsDTO
+            {
+                role = role,
+                user = user
+            });
         }
 
 

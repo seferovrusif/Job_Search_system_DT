@@ -52,5 +52,32 @@ namespace JobSearch.Api.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        [HttpPost("SendLoginCode")]
+        public async Task<IActionResult> SendLoginCode(LoginDTO dto)
+        {
+            try
+            {
+                await _userservice.SendLoginCodeAsync(dto);
+                return Ok(new { message = "A verification code has been sent to your email." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("VerifyLoginCode")]
+        public async Task<IActionResult> VerifyLoginCode(VerifyTwoFactorDTO dto)
+        {
+            try
+            {
+                TokenDTO token = await _userservice.VerifyLoginCodeAsync(dto);
+                return Ok(token);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
