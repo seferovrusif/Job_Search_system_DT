@@ -65,9 +65,7 @@ dotnet ef database update
 dotnet run
 ```
 
-Swagger UI available at:
-`https://localhost:5001/swagger/index.html`
-
+Swagger UI available 
 ---
 
 ## 🔐 Authentication
@@ -112,9 +110,6 @@ Authorization: Bearer {token}
 --
 
 ## 📝 API Documentation
-
-Swagger UI:
-`https://localhost:5001/swagger/index.html`
 
 OpenAPI compliant for easy testing and external integration (Postman collection exportable).
 
